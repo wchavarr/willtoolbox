@@ -1,0 +1,5 @@
+stream_name,format,contract_id,group_id,cp_tag,archive_ret,ingest_loc,origin_id,encoder_ver,ingest_auth,allowed_ips
+willmsl1,HLS,1-1NC95D,100073,1865719,30,US_SEA,1e059328-801f-4ad1-a5dd-ff50edbeb01c,ALL,OFF,ALL
+willmsl2,HLS,1-1NC95D,100073,1865719,30,US_SEA,1e059328-801f-4ad1-a5dd-ff50edbeb01c,ALL,OFF,ALL
+willmsl3,HLS,1-1NC95D,100073,1865719,30,US_SEA,1e059328-801f-4ad1-a5dd-ff50edbeb01c,ALL,OFF,1.1.1.1
+willmsl4,DASH,1-1NC95D,100073,1865719,1,US_SEA,1e059328-801f-4ad1-a5dd-ff50edbeb01c,ALL,OFF,1.1.1.1

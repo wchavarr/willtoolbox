@@ -1,0 +1,17 @@
+# Credentials (DO NOT REMOVE)
+.edgerc
+credentials.txt
+
+# Python Environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Mac/OS System Files
+.DS_Store
+.idea/
+.vscode/
+
+# Streamlit logs
+.streamlit/
