@@ -33,7 +33,7 @@ check_for_updates()
 # 3. BRANDING: Sidebar Logo
 st.logo("https://www.akamai.com/content/dam/site/en/images/logo/akamai-logo.svg")
 
-# 4. DEFINE PAGES (Updated versions for consistency)
+# 4. DEFINE PAGES
 pages = {
     "Identity & Access": [
         st.Page("apps/apiusersv2.py", title="Identity Control (v7.2)", icon="🛡️"),
@@ -54,9 +54,10 @@ pages = {
 # 5. INITIALIZE NAVIGATION
 pg = st.navigation(pages)
 
-# 6. SHARED SIDEBAR BRANDING (Updated to v1.7)
-st.sidebar.markdown("# 🚀 Will Toolbox v1.7")
+# 6. SHARED SIDEBAR BRANDING
+st.sidebar.markdown("# 🚀 Will Toolbox v1.7.1")
 st.sidebar.caption("Unified Management Platform")
+st.sidebar.caption("Created by wchavarr@akamai.com") # Added as requested
 st.sidebar.divider()
 
 # 7. RUN THE SELECTED PAGE
