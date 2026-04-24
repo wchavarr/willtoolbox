@@ -1,54 +1,56 @@
 # 🚀 Will Toolbox v1.7
 **Akamai Enterprise Management & Project Analytics Suite**
 
-A unified management platform consolidating Akamai-specific tools into a high-performance "Keyless" interface.
-
 ## 📁 Project Structure
-The suite is organized into a modular "Engine Room" structure. Individual tool logic resides in `apps/`.
+The suite uses a modular "Engine Room" structure. To add tools, drop the `.py` file into `apps/` and update `main.py`.
 
 ```plaintext
 willapps/
-├── main.py                # Central Hub, Navigation & Auto-Updater
+├── main.py                # Central Hub v1.7 (Navigation & Auto-Updater)
 ├── requirements.txt       # Unified dependencies
 ├── .gitignore             # Credential protection
 ├── msl5_bulk_template.csv # Template for MSL5 mass creation
-└── apps/                  # The "Engine Room"
-    ├── apiusersv2.py      # Identity Control (v7.2)
-    ├── certs_audit.py     # Master Certs Audit (v1.3.8)
-    ├── msl4app.py         # MSL4 Mapping Dashboard (v30.3)
-    ├── app.py             # MSL5 Bulk Tools (v11.6)
-    ├── account_finder.py  # Account Switch Finder (v2.2)
-    └── tcreport.py        # TC Report Dashboard (v1.8.6)
+└── apps/                  # Individual Tool Logic
 🛠️ Installation & Setup
 1. Environment Initialization
-Create a fresh virtual environment to isolate dependencies:
+Always use a virtual environment to prevent conflicts with system Python (especially on Mac/Homebrew):
 
 Bash
 python3 -m venv venv
-# Mac/Linux: source venv/bin/activate
-# Windows: venv\Scripts\activate
+# Mac/Linux:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
 2. Dependency Installation
+Install requirements directly from the file:
+
 Bash
+pip install --upgrade pip
 pip install -r requirements.txt
-3. Akamai Authentication
-Ensure your .edgerc file is in your home directory (~/.edgerc) with a [default] section.
-
 🚀 Key Features
-Keyless Search: All tools support "Reverse Account Lookup" by name.
+Auto-Updater: Detects code changes on GitHub and allows for a one-click sync to v1.7+.
 
-Primary Account Support: Audit your runner account by leaving search/key fields blank.
+Keyless Search: Support for "Reverse Account Lookup" across Identity, Certs, and MSL4 tools.
 
-Outlook Triage: One-click professional email generation for expiring certificates.
+Primary Account Support: Audit runner accounts by leaving switch key fields blank.
 
-MSL5 Bulk Creation: Use msl5_bulk_template.csv for mass stream uploads.
+⚠️ Troubleshooting & Compatibility
+1. ModuleNotFoundError: No module named 'akamai'
+Issue: You installed akamai-edgegrid but the code cannot find the module, or you are using Python 3.12+.
+Fix: Use the specific package name edgegrid-python. This is the actively maintained distribution that provides the akamai.edgegrid module for modern Python versions:
 
-Auto-Updater: One-click sync to the latest GitHub version.
+Bash
+pip install edgegrid-python
+2. Streamlit ignoring the Virtual Environment
+Issue: The app runs but ignores your installed libraries, often showing a path like /opt/homebrew/... in the error.
+Fix: Always launch the app using the Python module syntax from within your activated venv:
 
-⚠️ Important Configuration
-Outlook Triage: For the "Triage in Outlook" button to work, Microsoft Outlook must be set as the default Mail application on your operating system (Windows or macOS).
-
-Security: Never upload your .edgerc or private JWTs to GitHub. Use the provided .gitignore.
+Bash
+python -m streamlit run main.py
+3. Outlook Triage Button
+Requirement: For the "Triage in Outlook" button to function in the Certs tool, Microsoft Outlook must be set as the default Mail application on your OS.
 
 💻 Running the Suite
 Bash
-streamlit run main.py
+# Ensure venv is active!
+python -m streamlit run main.py

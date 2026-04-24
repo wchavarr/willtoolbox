@@ -1,6 +1,6 @@
 streamlit
 pandas
 requests
-akamai-edgegrid
+edgegrid-python
 plotly
 openpyxl
