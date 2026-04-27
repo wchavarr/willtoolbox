@@ -1,10 +1,3 @@
-GitHub can be picky about spacing and backtick placement. If a single line is off, it turns into a "wall of text" or doesn't render the code blocks correctly.
-
-Here is a GitHub-optimized version of the README. I’ve cleaned up the syntax, ensured every header has a proper space, and used standard Markdown blocks that are guaranteed to look clean on your repo page.
-
-Copy and paste everything below into your README.md:
-
-Markdown
 # 🚀 Will Toolbox v1.8.7
 **Akamai Enterprise Management & Project Analytics Suite**
 
