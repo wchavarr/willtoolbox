@@ -1,0 +1,15 @@
+[theme]
+# Akamai Orange for primary actions and metrics
+primaryColor="#FF8F00"
+
+# Main background color
+backgroundColor="#FFFFFF"
+
+# Sidebar and secondary containers
+secondaryBackgroundColor="#F0F2F6"
+
+# Primary text color
+textColor="#333333"
+
+# Font choice
+font="sans serif"

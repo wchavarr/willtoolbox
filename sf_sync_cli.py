@@ -1,11 +1,11 @@
 """
 ================================================================================
 FILE: sf_sync_cli.py
-VERSION: 1.0.3
+VERSION: 1.0.4
 DATE: 2026-04-27
 DESCRIPTION: Professional Salesforce Report Sync Tool.
-             Zero-default configuration. Relies on local JSON for IDs.
-             Overwrites local CSVs to ensure data freshness.
+             UPDATED: Uses Absolute Paths to ensure local config persistence
+             when launched via terminal aliases.
 ================================================================================
 """
 
@@ -16,10 +16,14 @@ import requests
 import csv
 
 # --- VERSION TRACKING ---
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 ORG_ALIAS = "akamai_sf"
-CONFIG_FILE = "reports_config.json"
-OUTPUT_FOLDER = "./downloads"
+
+# --- PATH LOCKING ---
+# This ensures the config file is always in the same folder as this script
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(BASE_DIR, "reports_config.json")
+OUTPUT_FOLDER = os.path.join(BASE_DIR, "downloads")
 
 def load_report_config():
     """Loads reports from local JSON. Returns empty dict if file missing."""
@@ -79,7 +83,6 @@ def sync_details_master(report_id, report_name, conn):
 
         if not os.path.exists(OUTPUT_FOLDER): os.makedirs(OUTPUT_FOLDER)
         file_path = os.path.join(OUTPUT_FOLDER, f"{report_name}.csv")
-        # 'w' mode ensures the file is overwritten with fresh data
         with open(file_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(headers_list)
