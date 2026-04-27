@@ -1,10 +1,19 @@
-🚀 Will Toolbox v1.8.7
-Akamai Enterprise Management & Project Analytics Suite
+GitHub can be picky about spacing and backtick placement. If a single line is off, it turns into a "wall of text" or doesn't render the code blocks correctly.
 
-📁 Project Structure
-The suite uses a modular "Engine Room" structure. To add tools, drop the .py file into apps/ and update main.py. Local configurations (Salesforce IDs) are kept out of Git for security.
+Here is a GitHub-optimized version of the README. I’ve cleaned up the syntax, ensured every header has a proper space, and used standard Markdown blocks that are guaranteed to look clean on your repo page.
 
-Plaintext
+Copy and paste everything below into your README.md:
+
+Markdown
+# 🚀 Will Toolbox v1.8.7
+**Akamai Enterprise Management & Project Analytics Suite**
+
+---
+
+## 📁 Project Structure
+The suite uses a modular "Engine Room" structure. To add tools, drop the `.py` file into `apps/` and update `main.py`. Local configurations (Salesforce IDs) are kept out of Git for security.
+
+```plaintext
 willapps/
 ├── main.py                # Central Hub v1.8.7 (Navigation & Auto-Updater)
 ├── sf_sync_cli.py         # Salesforce Sync Engine v1.0.4 (Matrix Flattener)
@@ -19,17 +28,15 @@ Initialize Virtual Environment:
 Bash
 python3 -m venv venv
 source venv/bin/activate
-What happens: This creates a clean "sandbox" for Python and activates it. You will see (venv) appear at the start of your terminal line.
+What happens: This creates a clean "sandbox" for Python. You will see (venv) appear at the start of your terminal line.
 
 Install Dependencies:
 
 Bash
 pip install -r requirements.txt
-What happens: The terminal will install the Akamai and Streamlit libraries required for the tools.
+What happens: The terminal installs the Akamai and Streamlit libraries required for the tools.
 
 🛠️ Step 2: Salesforce CLI Setup (Global System)
-The Toolbox requires the Salesforce CLI (sf) to be installed on your operating system.
-
 1. Installation (macOS Recommended):
 
 Bash
@@ -60,26 +67,27 @@ Click 🔄 Sync Reports Now.
 ⚡ Step 4: Optional Terminal Shortcut (Alias)
 To launch the Toolbox from anywhere without navigating to the folder:
 
-Open your zsh config: nano ~/.zshrc
+Open your zsh config:
 
-Add this line at the bottom:
+Bash
+nano ~/.zshrc
+Add this line at the bottom (replace [path/to/willapps] with your actual path):
+
+Bash
 alias toolbox='source /[path/to/willapps]/venv/bin/activate && python -m streamlit run /[path/to/willapps]/main.py'
+Save and refresh:
 
-Save and refresh: source ~/.zshrc
-
+Bash
+source ~/.zshrc
 Just type toolbox in any terminal window.
 
 ⚠️ Troubleshooting & Compatibility
-ModuleNotFoundError: No module named 'akamai'
-Fix: pip install edgegrid-python
+ModuleNotFoundError: No module named 'akamai' Fix: pip install edgegrid-python
 
-API Error 429 (Rate Limits)
-Fix: The Master Certs Audit (v1.4.8) includes an intelligent backoff engine. If you see a "Rate Limit" notification, the app will automatically pause and resume once Akamai clears the quota.
+API Error 429 (Rate Limits) Fix: The Master Certs Audit (v1.4.8) includes an intelligent backoff engine. If you see a "Rate Limit" notification, the app will automatically pause and resume once Akamai clears the quota.
 
-Salesforce Reports showing 0 rows
-Fix: In Salesforce, ensure the Detail Rows toggle is ON (bottom of report builder) and click Save.
+Salesforce Reports showing 0 rows Fix: In Salesforce, ensure the Detail Rows toggle is ON (bottom of report builder) and click Save.
 
-Outlook Triage Button
-Requirement: Microsoft Outlook must be set as the default Mail application on your OS.
+Outlook Triage Button Requirement: Microsoft Outlook must be set as the default Mail application on your OS.
 
 Created by wchavarr@akamai.com | Unified Management Platform v1.8.7
