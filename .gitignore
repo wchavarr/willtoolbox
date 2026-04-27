@@ -14,4 +14,7 @@ __pycache__/
 .vscode/
 
 # Streamlit logs
-.streamlit/
+.streamlit/reports_config.json
+
+downloads/
+reports_config.json
