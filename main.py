@@ -1,7 +1,7 @@
 """
 ================================================================================
 FILE: main.py
-VERSION: 1.8.7
+VERSION: 1.8.8
 DATE: 2026-04-27
 DESCRIPTION: Will Toolbox - Unified Management Platform.
              Integrated Salesforce management with absolute path persistence.
@@ -13,7 +13,7 @@ import os
 import subprocess
 
 # --- VERSION TRACKING ---
-VERSION = "1.8.7"
+VERSION = "1.8.8"
 
 # Import Sync Logic
 try:
@@ -73,7 +73,8 @@ pages = {
     ],
     "Media Services Live": [
         st.Page("apps/app.py", title="MSL5 Bulk Tools (v11.6)", icon="🚀"),
-        st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.3)", icon="📊"),
+        # UPDATED MSL4 VERSION HERE
+        st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.4)", icon="📊"),
     ],
     "Project Tracking": [
         st.Page("apps/tcreport.py", title="TC Report Dashboard (v1.8.6)", icon="📈"),
