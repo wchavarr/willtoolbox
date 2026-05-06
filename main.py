@@ -74,7 +74,7 @@ pages = {
         st.Page("apps/certs_audit.py", title="Master Certs Audit (v1.4.8)", icon="📜"),
     ],
     "Media Services Live": [
-        st.Page("apps/app.py", title="MSL5 Bulk Tools (v11.6)", icon="🚀"),
+        st.Page("apps/app.py", title="MSL5 Bulk Tools (v11.7)", icon="🚀"),
         # UPDATED: MSL4 Mapping Dashboard v30.6
         st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.6)", icon="📊"),
     ],

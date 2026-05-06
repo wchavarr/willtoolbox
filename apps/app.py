@@ -51,6 +51,7 @@ def fetch_data():
                         "stream_id": s.get("stream_id"),
                         "stream_name": s.get("description"),
                         "format": s.get("format"),
+                        "cp_tag": s.get("cptag", "N/A"), # <--- AGREGADO: FETCH DE CPTAG
                         "contract_id": s.get("contract_id"),
                         "group_id": s.get("group_id"),
                         "ingest_loc": s.get("ingest_location"),
@@ -87,7 +88,7 @@ with st.sidebar:
     st.session_state.token = st.text_input("JWT Token", type="password")
     st.session_state.askey = st.text_input("Account Switch Key", placeholder="1-XXXX:1-YYYY")
     st.divider()
-    st.caption("v11.6 | Production Locked")
+    st.caption("v11.7 | Production Locked")
 
 # --- 4. TABS ---
 tab_create, tab_edit, tab_explorer, tab_csv = st.tabs([
@@ -158,7 +159,7 @@ with tab_edit:
         col_ed1, col_ed2, col_ed3 = st.columns(3)
         with col_ed1:
             with st.expander("📖 Editor Info"):
-                st.markdown("1. Fetch live data.\n2. Edit values.\n3. Locked: ID, Contract, Format.")
+                st.markdown("1. Fetch live data.\n2. Edit values.\n3. Locked: ID, Contract, Format, CP Tag.")
         
         st.divider()
         btn_col1, btn_col2 = st.columns([2, 1])
@@ -174,10 +175,11 @@ with tab_edit:
             if st.session_state.editor_results:
                 st.text_area("Logs", value="\n".join(st.session_state.editor_results), height=150)
             
+            # CONFIGURACIÓN DEL EDITOR CON CP_TAG BLOQUEADO
             edited_df = st.data_editor(
                 st.session_state.editor_df,
                 use_container_width=True, hide_index=True,
-                disabled=["stream_id", "contract_id", "ingest_loc", "format"],
+                disabled=["stream_id", "contract_id", "ingest_loc", "format", "cp_tag"], # <--- BLOQUEADO CPTAG
                 key="msl_editor_widget"
             )
 
@@ -226,6 +228,7 @@ with tab_edit:
 # ==========================================
 # TAB 3: ORIGIN EXPLORER
 # ==========================================
+# ... [Sin cambios en tab_explorer]
 with tab_explorer:
     if consent:
         st.subheader("🔍 Origin & Stream Inventory")
@@ -248,7 +251,7 @@ with tab_explorer:
                             o_id = str(o.get("id") or o.get("origin_id", "")).strip()
                             o_name = o.get("host_name") or o.get("name") or "Unnamed"
                             tied = [s for s in streams if str(s.get("origin_id", "")).strip() == o_id]
-                            stream_count = len(tied) # RE-ADDED COUNT
+                            stream_count = len(tied)
                             if not tied: inv.append({"Origin Host Name": o_name, "Origin ID": o_id, "Stream Count": 0, "Stream Name": "--- EMPTY ---", "Stream ID": "N/A"})
                             else:
                                 for s in tied: inv.append({"Origin Host Name": o_name, "Origin ID": o_id, "Stream Count": stream_count, "Stream Name": s.get("description"), "Stream ID": s.get("stream_id")})
@@ -262,15 +265,13 @@ with tab_explorer:
             st.dataframe(df, use_container_width=True, hide_index=True)
 
 # ==========================================
-# TAB 4: 📂 BULK STREAM CSV EDITOR (LOCKED)
+# TAB 4: 📂 BULK STREAM CSV EDITOR
 # ==========================================
+# ... [Sin cambios en tab_csv]
 with tab_csv:
     if consent:
         st.subheader("📂 Bulk Stream CSV Editor")
-        
-        # --- RED SAFETY NOTE ---
         st.error("⚠️ **CRITICAL:** For best performance and safety, please upload a CSV containing **ONLY** the specific rows that require updates.")
-        
         st.markdown("1. Fetch/Download from **Stream Editor**. 2. Edit Excel. 3. Upload here.")
         up = st.file_uploader("Upload Edited CSV", type="csv", key="csv_sync_uploader")
         
@@ -280,20 +281,15 @@ with tab_csv:
                 st.error("❌ Missing 'stream_id'")
             else:
                 st.dataframe(udf, use_container_width=True, hide_index=True)
-                
                 if st.button("🔥 Start Bulk Sync", type="primary", use_container_width=True):
                     token = st.session_state.get('token', '').replace("Bearer ", "").strip()
                     askey = st.session_state.get('askey', '')
-                    
-                    # --- LIVE UI ELEMENTS ---
                     bar = st.progress(0)
                     status_text = st.empty()
                     log_display = st.empty() 
                     live_logs = ""
-                    
                     for i, row in udf.iterrows():
                         status_text.text(f"Processing {i+1} of {len(udf)}: {row['stream_name']}...")
-                        
                         payload = {
                             "description": str(row['stream_name']).strip().lower(),
                             "format": str(row['format']).upper(),
@@ -307,22 +303,13 @@ with tab_csv:
                                 "no_archive": bool(row.get('no_archive', False))
                             }
                         }
-                        
                         url = f"https://gateway.mslapis.net/api/v1/streams/{row['stream_id']}"
                         if askey: url += f"?accountSwitchKey={askey}"
-                        
                         try:
                             r = requests.put(url, json=payload, headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-                            if r.status_code < 300:
-                                live_logs += f"✅ SUCCESS: {row['stream_name']}\n"
-                            else:
-                                live_logs += f"❌ FAILED: {row['stream_name']} (Error {r.status_code})\n"
-                        except Exception as e:
-                            live_logs += f"⚠️ ERROR: {row['stream_id']} - {e}\n"
-                        
-                        # Update UI
+                            if r.status_code < 300: live_logs += f"✅ SUCCESS: {row['stream_name']}\n"
+                            else: live_logs += f"❌ FAILED: {row['stream_name']} (Error {r.status_code})\n"
+                        except Exception as e: live_logs += f"⚠️ ERROR: {row['stream_id']} - {e}\n"
                         log_display.text_area("Live Sync Report", value=live_logs, height=300)
                         bar.progress((i + 1) / len(udf))
-                        
                     st.success("🏁 Bulk Sync Task Finished!")
-                    status_text.empty()
