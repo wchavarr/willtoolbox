@@ -1,86 +1,82 @@
-# 🚀 Will Toolbox v1.8.7
+# 🚀 Will Toolbox v1.9.3
 **Akamai Enterprise Management & Project Analytics Suite**
+
+The Will Toolbox is a unified command center designed for Akamai Architects and Consultants. It automates high-friction tasks like bulk MSL5 creation, certificate auditing, and Salesforce project synchronization.
 
 ---
 
 ## 📁 Project Structure
-The suite uses a modular "Engine Room" structure. To add tools, drop the `.py` file into `apps/` and update `main.py`. Local configurations (Salesforce IDs) are kept out of Git for security.
+The suite uses a modular "Engine Room" structure. To add tools, drop the `.py` file into `apps/` and update `main.py`. 
 
 ```plaintext
 willapps/
-├── main.py                # Central Hub v1.8.7 (Navigation & Auto-Updater)
+├── main.py                # Central Hub v1.9.3 (Navigation & Auto-Updater)
 ├── sf_sync_cli.py         # Salesforce Sync Engine v1.0.4 (Matrix Flattener)
 ├── requirements.txt       # Unified dependencies
 ├── .gitignore             # Credential & local data protection
 ├── msl5_bulk_template.csv # Template for MSL5 mass creation
-├── reports_config.json    # [LOCAL ONLY] User-defined Report IDs
-└── apps/                  # Individual Tool Logic
-🛠️ Step 1: Python Environment Setup
+├── apps/                  # Individual Tool Logic
+│   ├── app.py             # MSL5 Bulk Tools v12.2 (Origin & Stream Creator)
+│   ├── msl4app.py         # MSL4 Mapping Dashboard v30.6
+│   ├── account_finder.py  # Account Switch Finder v2.3
+│   ├── certs_audit.py     # Master Certs Audit v1.4.8
+│   └── tcreport.py        # TC Report Dashboard v1.8.6
+🛠️ Installation & Setup
+Step 1: Python Environment
 Initialize Virtual Environment:
 
 Bash
 python3 -m venv venv
 source venv/bin/activate
-What happens: This creates a clean "sandbox" for Python. You will see (venv) appear at the start of your terminal line.
-
 Install Dependencies:
 
 Bash
 pip install -r requirements.txt
-What happens: The terminal installs the Akamai and Streamlit libraries required for the tools.
+Step 2: Salesforce CLI Setup
+Installation: brew install --cask salesforce-cli (macOS).
 
-🛠️ Step 2: Salesforce CLI Setup (Global System)
-1. Installation (macOS Recommended):
-
-Bash
-brew install --cask salesforce-cli
-2. Verification:
-Restart your terminal and run: sf --version.
-
-3. Authentication:
-Authorize your Akamai SF account with the required alias:
-
-Bash
+Authentication: ```bash
 sf org login web -a akamai_sf
-Log in via the browser and click "Allow".
 
-🚀 Step 3: Running & Configuring the App
-Launch Command:
+*Note: You must use the alias `akamai_sf` for the sync engine to work.*
 
-Bash
-python -m streamlit run main.py
-First-Time Configuration:
+📘 Power User Guide: Using the Tools
+1. MSL5 Bulk Tools (JWT Authentication)
+Unlike other tools that use .edgerc, the MSL5 suite (Stream & Origin Creator) uses JWT Bearer Tokens.
 
-Go to Project Tracking > TC Report Dashboard.
+Where to get it: Generate a token from the Akamai Identity Management portal or your specific MSL5 API client.
 
-Use the ⚙️ Manage Report IDs tool in the sidebar to add your Salesforce IDs.
+How to use: Paste the token into the sidebar. It is used as a Bearer header for all requests.
 
-Click 🔄 Sync Reports Now.
+Origin Creator: Requires a CSV with host_name, contract_id, cptag, group_id, ingest_location, and backup_ingest_location.
 
-⚡ Step 4: Optional Terminal Shortcut (Alias)
-To launch the Toolbox from anywhere without navigating to the folder:
+2. TC Report Dashboard (Salesforce Sync)
+This tool pulls data directly from your SF Reports.
 
-Open your zsh config:
+Report IDs: Copy the 18-character ID from the Salesforce URL.
 
-Bash
-nano ~/.zshrc
-Add this line at the bottom (replace [path/to/willapps] with your actual path):
+CRITICAL: In Salesforce, the report MUST have the "Detail Rows" toggle turned ON and be saved. If it only shows summary data, the sync will return 0 rows.
+
+Manage IDs: Use the ⚙️ icon in the sidebar to add/remove reports without touching the code.
+
+3. Quota-Safe Search (MSL4, Certs, Finder)
+To prevent burning your API quota while typing, these tools use a "Find Account" form.
+
+Type at least 3 characters of a customer name (e.g., "Disney").
+
+Click the Find Account button.
+
+Select the match from the dropdown. This ensures only one API call is made instead of dozens.
+
+⚡ Terminal Shortcut (The "Toolbox" Command)
+To launch the Toolbox from anywhere:
+
+Open your config: nano ~/.zshrc
+
+Add this line:
 
 Bash
 alias toolbox='source /[path/to/willapps]/venv/bin/activate && python -m streamlit run /[path/to/willapps]/main.py'
-Save and refresh:
+Refresh: source ~/.zshrc
 
-Bash
-source ~/.zshrc
 Just type toolbox in any terminal window.
-
-⚠️ Troubleshooting & Compatibility
-ModuleNotFoundError: No module named 'akamai' Fix: pip install edgegrid-python
-
-API Error 429 (Rate Limits) Fix: The Master Certs Audit (v1.4.8) includes an intelligent backoff engine. If you see a "Rate Limit" notification, the app will automatically pause and resume once Akamai clears the quota.
-
-Salesforce Reports showing 0 rows Fix: In Salesforce, ensure the Detail Rows toggle is ON (bottom of report builder) and click Save.
-
-Outlook Triage Button Requirement: Microsoft Outlook must be set as the default Mail application on your OS.
-
-Created by wchavarr@akamai.com | Unified Management Platform v1.8.7
