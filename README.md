@@ -1,9 +1,3 @@
-You're absolutely right—not everyone wants to set up an alias right away. We should make sure the standard "manual" startup is crystal clear.
-
-I've updated the Step 3 in the README.md to show the standard run commands, including the python -m variation which is often more stable across different OS environments.
-
-README.md | Version 1.9.3 (Full Revision)
-Markdown
 # 🚀 Will Toolbox v1.9.3
 **Akamai Enterprise Management & Project Analytics Suite**
 
