@@ -1,10 +1,11 @@
 """
 ================================================================================
 FILE: main.py
-VERSION: 1.8.8
-DATE: 2026-04-27
+VERSION: 1.9.0
+DATE: 2026-05-06
 DESCRIPTION: Will Toolbox - Unified Management Platform.
              Integrated Salesforce management with absolute path persistence.
+             All search tools updated to Safe-Search (Form-based) logic.
 ================================================================================
 """
 
@@ -13,7 +14,7 @@ import os
 import subprocess
 
 # --- VERSION TRACKING ---
-VERSION = "1.8.8"
+VERSION = "1.9.0"
 
 # Import Sync Logic
 try:
@@ -66,15 +67,16 @@ st.logo("https://www.akamai.com/content/dam/site/en/images/logo/akamai-logo.svg"
 pages = {
     "Identity & Access": [
         st.Page("apps/apiusersv2.py", title="Identity Control (v7.2)", icon="🛡️"),
-        st.Page("apps/account_finder.py", title="Account Switch Finder (v2.2)", icon="🔍"),
+        # UPDATED: Account Switch Finder v2.3
+        st.Page("apps/account_finder.py", title="Account Switch Finder (v2.3)", icon="🔍"),
     ],
     "Certificates": [
         st.Page("apps/certs_audit.py", title="Master Certs Audit (v1.4.8)", icon="📜"),
     ],
     "Media Services Live": [
         st.Page("apps/app.py", title="MSL5 Bulk Tools (v11.6)", icon="🚀"),
-        # UPDATED MSL4 VERSION HERE
-        st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.4)", icon="📊"),
+        # UPDATED: MSL4 Mapping Dashboard v30.6
+        st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.6)", icon="📊"),
     ],
     "Project Tracking": [
         st.Page("apps/tcreport.py", title="TC Report Dashboard (v1.8.6)", icon="📈"),

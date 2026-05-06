@@ -1,128 +1,122 @@
-"""
-================================================================================
-FILE: main.py
-VERSION: 1.8.9
-DATE: 2026-04-27
-DESCRIPTION: Will Toolbox - Unified Management Platform.
-             Integrated Salesforce management with absolute path persistence.
-================================================================================
-"""
-
 import streamlit as st
+import pandas as pd
+import requests
+from akamai.edgegrid import EdgeGridAuth, EdgeRc
 import os
-import subprocess
+import time
+import re
 
-# --- VERSION TRACKING ---
-VERSION = "1.8.9"
+# --- VERSION INFO ---
+VERSION = "2.3"
 
-# Import Sync Logic
-try:
-    from sf_sync_cli import (
-        get_sf_connection, sync_details_master, load_report_config, save_report_config
-    )
-except ImportError:
-    st.error("🚨 CRITICAL: sf_sync_cli.py not found in the root directory.")
-
-# --- AUTO-UPDATER LOGIC ---
-def check_for_updates():
+# --- HELPER: GET HOST FROM EDGERC ---
+def get_host_from_edgerc(section_name):
     try:
-        subprocess.run(['git', 'fetch'], check=True, capture_output=True)
-        local_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()
-        remote_hash = subprocess.check_output(['git', 'rev-parse', 'origin/main']).decode().strip()
-        
-        if local_hash != remote_hash:
-            st.sidebar.warning("🚀 **Update Available!**")
-            if st.sidebar.button("Update & Restart Toolbox", use_container_width=True):
-                st.sidebar.info("Pulling latest changes...")
-                subprocess.run(['git', 'pull', 'origin', 'main'], check=True)
-                st.rerun()
-    except Exception:
+        edgerc = EdgeRc(os.path.expanduser("~/.edgerc"))
+        return edgerc.get(section_name, 'host')
+    except Exception as e:
+        st.error(f"Error reading .edgerc section [{section_name}]: {e}")
+        return None
+
+# --- RATE LIMIT HANDLER ---
+def handle_429(response):
+    """Parses the Akamai 429 response and waits the requested time."""
+    wait_time = 25  
+    try:
+        error_data = response.json()
+        detail = error_data.get("detail", "")
+        # Busca el tiempo de espera sugerido por Akamai
+        match = re.search(r'after: (\d+)', detail)
+        if match:
+            wait_time = int(match.group(1)) + 3 
+    except:
         pass
+    
+    msg = f"🛑 API Limit Reached. Akamai says wait {wait_time}s. Pausing..."
+    st.toast(msg, icon="🚨")
+    with st.status(msg, expanded=False):
+        time.sleep(wait_time)
+    return True
 
-# --- SF SYNC WRAPPER ---
-def run_manual_sync():
-    reports = load_report_config()
-    with st.sidebar.status("🔄 Syncing Salesforce...", expanded=True) as status:
-        conn = get_sf_connection()
-        if conn:
-            for rid, rname in reports.items():
-                st.write(f"Downloading {rname}...")
-                sync_details_master(rid, rname, conn)
-            status.update(label="Sync Complete!", state="complete", expanded=False)
-            st.sidebar.success("Reports Updated")
-            st.rerun()
-        else:
-            status.update(label="Sync Failed", state="error")
-            st.sidebar.error("CLI Authentication Failed. Check README.")
+# --- UNIFIED API ENGINE ---
+def akamai_request(method, path, section_name):
+    """Unified request handler with built-in 429 management."""
+    host = get_host_from_edgerc(section_name)
+    if not host: return 500, None
+    
+    url = f"https://{host}/{path.lstrip('/')}"
+    
+    for attempt in range(3):
+        try:
+            auth = EdgeGridAuth.from_edgerc("~/.edgerc", section_name)
+            res = requests.request(method, url, auth=auth, timeout=20)
+            
+            if res.status_code == 429:
+                handle_429(res)
+                continue 
+            
+            return res.status_code, res.json() if res.status_code == 200 else None
+        except Exception as e:
+            return 500, None
+    return 429, None
 
-# 1. GLOBAL CONFIGURATION
-st.set_page_config(page_title="Will Toolbox", page_icon="🛡️", layout="wide")
-check_for_updates()
+# --- UI ---
+st.title("🔍 Account Switch Finder")
+st.markdown("Search for Akamai accounts to retrieve their **Account Switch Keys**.")
 
-# 2. BRANDING
-st.logo("https://www.akamai.com/content/dam/site/en/images/logo/akamai-logo.svg")
+# --- SIDEBAR SEARCH FORM (SAFE MODE) ---
+st.sidebar.title("Settings")
+section = st.sidebar.text_input("Edgerc Section", value="default")
 
-# 3. DEFINE PAGES
-pages = {
-    "Identity & Access": [
-        st.Page("apps/apiusersv2.py", title="Identity Control (v7.2)", icon="🛡️"),
-        # UPDATED FINDER VERSION HERE
-        st.Page("apps/account_finder.py", title="Account Switch Finder (v2.3)", icon="🔍"),
-    ],
-    "Certificates": [
-        st.Page("apps/certs_audit.py", title="Master Certs Audit (v1.4.8)", icon="📜"),
-    ],
-    "Media Services Live": [
-        st.Page("apps/app.py", title="MSL5 Bulk Tools (v11.6)", icon="🚀"),
-        st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.4)", icon="📊"),
-    ],
-    "Project Tracking": [
-        st.Page("apps/tcreport.py", title="TC Report Dashboard (v1.8.6)", icon="📈"),
-    ]
-}
+with st.sidebar.form("finder_form"):
+    search_query = st.text_input("Account Name or ID:", placeholder="e.g. NBA")
+    submit_search = st.form_submit_button("🔍 Search Accounts")
 
-# 4. INITIALIZE NAVIGATION
-pg = st.navigation(pages)
-
-# 5. SIDEBAR BRANDING
-st.sidebar.markdown(f"# 🚀 Will Toolbox v{VERSION}")
-st.sidebar.caption("Unified Management Platform")
-st.sidebar.caption("Created by wchavarr@akamai.com")
-st.sidebar.divider()
-
-# --- CONTEXTUAL SALESFORCE TOOLS ---
-if pg.title == "TC Report Dashboard (v1.8.6)":
-    st.sidebar.subheader("Salesforce Integration")
-    reports = load_report_config()
-
-    if not reports:
-        st.sidebar.warning("⚠️ No reports configured.")
+# --- SEARCH LOGIC ---
+if submit_search and search_query:
+    if len(search_query) < 3:
+        st.warning("Please enter at least 3 characters to search.")
     else:
-        if st.sidebar.button("🔄 Sync Reports Now", use_container_width=True):
-            run_manual_sync()
+        with st.spinner(f"Searching for '{search_query}'..."):
+            path = f"identity-management/v3/api-clients/self/account-switch-keys?search={search_query}"
+            status, data = akamai_request("GET", path, section)
+            
+            if status == 200:
+                st.session_state['finder_results'] = data
+            elif status == 429:
+                st.error("Rate limit exceeded. Please try again in a few seconds.")
+            else:
+                st.error(f"Search failed with error code: {status}")
 
-    with st.sidebar.expander("⚙️ Manage Report IDs", expanded=not reports):
-        st.markdown("### Add Report")
-        new_name = st.text_input("Name", placeholder="e.g. NBA_Reports")
-        new_id = st.text_input("Report ID", placeholder="18-character ID")
+# --- DISPLAY RESULTS ---
+if 'finder_results' in st.session_state:
+    results = st.session_state['finder_results']
+    
+    if results:
+        st.write(f"### Found {len(results)} matches:")
         
-        if st.button("➕ Add to Local Config", use_container_width=True):
-            if new_name and new_id:
-                clean_name = "".join([c if c.isalnum() else "_" for c in new_name])
-                reports[new_id] = clean_name
-                save_report_config(reports)
-                st.rerun()
+        # DataFrame para visualización tabular
+        df = pd.DataFrame(results)
+        df = df.rename(columns={
+            'accountName': 'Account Name',
+            'accountSwitchKey': 'Switch Key'
+        })
+        
+        st.dataframe(df[['Account Name', 'Switch Key']], use_container_width=True, hide_index=True)
+        
+        # Lista de copiado rápido
+        st.divider()
+        st.write("#### Quick Copy List")
+        for item in results:
+            col1, col2 = st.columns([2, 3])
+            col1.write(f"**{item['accountName']}**")
+            col2.code(item['accountSwitchKey'], language="text")
+            
+        if st.button("Clear Results"):
+            if 'finder_results' in st.session_state:
+                del st.session_state['finder_results']
+            st.rerun()
+    else:
+        st.info("No accounts found matching that query.")
 
-        if reports:
-            st.divider()
-            for rid, rname in list(reports.items()):
-                c1, c2 = st.columns([4, 1])
-                c1.caption(f"**{rname}**\n{rid}")
-                if c2.button("🗑️", key=rid):
-                    del reports[rid]
-                    save_report_config(reports)
-                    st.rerun()
-    st.sidebar.divider()
-
-# 6. RUN THE SELECTED PAGE
-pg.run()
+st.caption(f"v{VERSION} | Unified Akamai Identity Engine")
