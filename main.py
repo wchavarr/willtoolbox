@@ -67,15 +67,14 @@ st.logo("https://www.akamai.com/content/dam/site/en/images/logo/akamai-logo.svg"
 pages = {
     "Identity & Access": [
         st.Page("apps/apiusersv2.py", title="Identity Control (v7.2)", icon="🛡️"),
-        # UPDATED: Account Switch Finder v2.3
         st.Page("apps/account_finder.py", title="Account Switch Finder (v2.3)", icon="🔍"),
     ],
     "Certificates": [
         st.Page("apps/certs_audit.py", title="Master Certs Audit (v1.4.8)", icon="📜"),
     ],
     "Media Services Live": [
-        st.Page("apps/app.py", title="MSL5 Bulk Tools (v12.2)", icon="🚀"),
-        # UPDATED: MSL4 Mapping Dashboard v30.6
+        # ACTUALIZADO: Cambiamos v12.2 por v13.4
+        st.Page("apps/app.py", title="MSL5 Bulk Tools (v13.4)", icon="🚀"), 
         st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.6)", icon="📊"),
     ],
     "Project Tracking": [
