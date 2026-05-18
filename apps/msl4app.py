@@ -157,5 +157,40 @@ if sync_button:
 # --- DISPLAY ---
 if "master_df" in st.session_state:
     df = st.session_state.master_df
+    
+    # 1. Mostrar métrica general
     st.metric("Total Streams", len(df))
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.divider()
+
+    # 2. MOTOR DE BÚSQUEDA (Nueva funcionalidad v30.7)
+    # Creamos un buscador que filtre por ID o por Nombre
+    search_query = st.text_input("🔍 Search MSL4 Inventory", placeholder="Filter by Stream Name, Stream ID, or Origin...")
+
+    # Hacemos una copia para el filtrado
+    display_df = df.copy()
+
+    if search_query:
+        # Filtro universal en todas las columnas
+        mask = display_df.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)
+        display_df = display_df[mask]
+        st.caption(f"Showing {len(display_df)} matches for '{search_query}'")
+
+    # 3. RENDERIZADO DE TABLA
+    # Configuramos las columnas para que los IDs se vean completos
+    msl4_cfg = {
+        "Stream ID": st.column_config.TextColumn("Stream ID", width="medium"),
+        "Origin ID": st.column_config.TextColumn("Origin ID", width="small"),
+        "Stream Name": st.column_config.TextColumn("Stream Name", width="large")
+    }
+
+    st.dataframe(display_df, use_container_width=True, hide_index=True, column_config=msl4_cfg)
+
+    # 4. BOTÓN DE DESCARGA (Exporta solo lo filtrado)
+    csv_msl4 = display_df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 Download Results as CSV",
+        data=csv_msl4,
+        file_name=f"msl4_audit_{display_account.lower().replace(' ', '_')}.csv",
+        mime="text/csv",
+        use_container_width=True
+    )

@@ -73,12 +73,11 @@ pages = {
         st.Page("apps/certs_audit.py", title="Master Certs Audit (v1.4.8)", icon="📜"),
     ],
     "Media Services Live": [
-        # ACTUALIZADO: Cambiamos v12.2 por v13.4
-        st.Page("apps/app.py", title="MSL5 Bulk Tools (v13.4)", icon="🚀"), 
-        st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.6)", icon="📊"),
+        st.Page("apps/app.py", title="MSL5 Bulk Tools (v13.4)", icon="🚀"),
+        st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.7)", icon="📊"),
     ],
     "Project Tracking": [
-        st.Page("apps/tcreport.py", title="TC Report Dashboard (v1.8.6)", icon="📈"),
+        st.Page("apps/tcreport.py", title="TC Report Dashboard (v2.0.6)", icon="📈")
     ]
 }
 
@@ -92,7 +91,7 @@ st.sidebar.caption("Created by wchavarr@akamai.com")
 st.sidebar.divider()
 
 # --- CONTEXTUAL SALESFORCE TOOLS ---
-if pg.title == "TC Report Dashboard (v1.8.6)":
+if pg.title == "TC Report Dashboard (v2.0.6)":
     st.sidebar.subheader("Salesforce Integration")
     reports = load_report_config()
 
