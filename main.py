@@ -1,11 +1,9 @@
 """
 ================================================================================
 FILE: main.py
-VERSION: 1.9.0
-DATE: 2026-05-06
+VERSION: 2.2.3
 DESCRIPTION: Will Toolbox - Unified Management Platform.
-             Integrated Salesforce management with absolute path persistence.
-             All search tools updated to Safe-Search (Form-based) logic.
+             Stable page registration engine without cross-page code modifications.
 ================================================================================
 """
 
@@ -14,7 +12,7 @@ import os
 import subprocess
 
 # --- VERSION TRACKING ---
-VERSION = "1.9.0"
+VERSION = "2.2.3"
 
 # Import Sync Logic
 try:
@@ -63,7 +61,7 @@ check_for_updates()
 # 2. BRANDING
 st.logo("https://www.akamai.com/content/dam/site/en/images/logo/akamai-logo.svg")
 
-# 3. DEFINE PAGES
+# 3. DEFINE PAGES (Removed Analytics & Compliance Group)
 pages = {
     "Identity & Access": [
         st.Page("apps/apiusersv2.py", title="Identity Control (v7.2)", icon="🛡️"),
@@ -77,7 +75,7 @@ pages = {
         st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.7)", icon="📊"),
     ],
     "Project Tracking": [
-        st.Page("apps/tcreport.py", title="TC Report Dashboard (v2.0.6)", icon="📈")
+        st.Page("apps/tcreport.py", title="TC Report Dashboard (v2.0.6)", icon="📈"),
     ]
 }
 

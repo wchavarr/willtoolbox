@@ -7,12 +7,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 # --- VERSION INFO ---
 # FILENAME: apiusersv2.py
-# VERSION: 7.2
+# VERSION: 7.2.5
 # STATUS: LOCKED / PRODUCTION
 # DESCRIPTION: 
-#    - Integrated Reverse Account Lookup (Search by Name).
-#    - Tab 1: Detailed Permission Audit via /api-clients/{clientId}?apiAccess=true.
-#    - Tab 2: Stable Credential Metadata (Status/Expiration).
+#     - Integrated Reverse Account Lookup (Search by Name).
+#     - Tab 1: Detailed Permission Audit via /api-clients/{clientId}?apiAccess=true.
+#     - Tab 2: Stable Credential Metadata (Status/Expiration).
+#     - Crash Prevention: Full validation guards for empty search string frames.
 # ---------------------
 
 # --- API INITIALIZATION ---
@@ -38,10 +39,10 @@ def search_accounts(query):
     except: return {}
     return {}
 
-# --- SIDEBAR CONFIGURATION ---
+# --- SIDEBAR CONFIGURATION (RESTORED NATIVE CONTROLS) ---
 st.sidebar.title("⚙️ Connection Settings")
 
-# 1. Added Search UI
+# 1. Re-mount Search UI
 st.sidebar.subheader("🔍 Account Lookup")
 acc_query = st.sidebar.text_input("Search Account Name:", placeholder="e.g. NBA or Canadian")
 found_accounts = search_accounts(acc_query)
@@ -177,14 +178,26 @@ with tab1:
         else: f1 = df1
 
         m1, m2, m3 = st.columns(3)
-        m1.metric("Visible Clients", len(f1['API Client'].unique()))
-        m2.metric("Visible Permissions", len(f1))
-        m3.metric("Visible RW Keys", len(f1[f1['Access Level'] == 'READ-WRITE']))
+        if not f1.empty:
+            m1.metric("Visible Clients", len(f1['API Client'].unique()))
+            m2.metric("Visible Permissions", len(f1))
+            m3.metric("Visible RW Keys", len(f1[f1['Access Level'] == 'READ-WRITE']))
+        else:
+            m1.metric("Visible Clients", 0)
+            m2.metric("Visible Permissions", 0)
+            m3.metric("Visible RW Keys", 0)
         st.divider()
 
         def styler_p(v): return 'color: #FF8F00; font-weight: bold' if v == 'READ-WRITE' else ''
+        
+        # Guard styler engine context
+        if not f1.empty:
+            styled_f1 = f1.style.map(styler_p, subset=['Access Level']) if hasattr(f1.style, 'map') else f1.style.applymap(styler_p, subset=['Access Level'])
+        else:
+            styled_f1 = f1
+
         st.dataframe(
-            f1.style.map(styler_p, subset=['Access Level']) if hasattr(f1.style, 'map') else f1.style.applymap(styler_p, subset=['Access Level']),
+            styled_f1,
             use_container_width=True, hide_index=True,
             column_config={"Portal Link": st.column_config.LinkColumn(display_text="Open in Akamai")}
         )
@@ -198,9 +211,14 @@ with tab2:
         f2 = df2[df2.apply(lambda r: s2.lower() in r.astype(str).str.lower().values, axis=1)] if s2 else df2
         
         c1, c2, c3 = st.columns(3)
-        c1.metric("Visible Clients", len(f2))
-        c2.metric("Active", len(f2[f2['Status'] == 'ACTIVE']))
-        c3.metric("Inactive/Missing", len(f2[f2['Status'] != 'ACTIVE']), delta_color="inverse")
+        if not f2.empty:
+            c1.metric("Visible Clients", len(f2))
+            c2.metric("Active", len(f2[f2['Status'] == 'ACTIVE']))
+            c3.metric("Inactive/Missing", len(f2[f2['Status'] != 'ACTIVE']), delta_color="inverse")
+        else:
+            c1.metric("Visible Clients", 0)
+            c2.metric("Active", 0)
+            c3.metric("Inactive/Missing", 0, delta_color="inverse")
         st.divider()
 
         def styler_s(v):
@@ -208,8 +226,14 @@ with tab2:
             if v in ['INACTIVE', 'ERR', 'NO CREDS']: return 'color: #dc3545;'
             return ''
             
+        # Guard styler engine context
+        if not f2.empty:
+            styled_f2 = f2.style.map(styler_s, subset=['Status']) if hasattr(f2.style, 'map') else f2.style.applymap(styler_s, subset=['Status'])
+        else:
+            styled_f2 = f2
+            
         st.dataframe(
-            f2.style.map(styler_s, subset=['Status']) if hasattr(f2.style, 'map') else f2.style.applymap(styler_s, subset=['Status']),
+            styled_f2,
             use_container_width=True, hide_index=True,
             column_config={"Portal Link": st.column_config.LinkColumn(display_text="Open in Akamai")}
         )
