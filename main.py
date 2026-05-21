@@ -75,7 +75,7 @@ pages = {
         st.Page("apps/msl4app.py", title="MSL4 Mapping Dashboard (v30.7)", icon="📊"),
     ],
     "Project Tracking": [
-        st.Page("apps/tcreport.py", title="TC Report Dashboard (v2.0.6)", icon="📈"),
+        st.Page("apps/tcreport.py", title="TC Report Dashboard (v2.1.2)", icon="📈"),
     ]
 }
 

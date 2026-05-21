@@ -18,3 +18,4 @@ __pycache__/
 
 downloads/
 reports_config.json
+apps/a360_compliance.py
