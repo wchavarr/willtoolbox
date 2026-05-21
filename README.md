@@ -31,22 +31,22 @@ Navigate to the folder where you want to save the project (e.g., your Desktop):
 
 Bash
 cd ~/Desktop
-Copy the project repository using git clone:
+Copy the project repository using git clone (adding willapps at the end forces Git to create the folder with your exact local naming scheme):
 
 Bash
-git clone [PASTE_YOUR_REPOSITORY_URL_HERE]
+git clone [https://github.com/](https://github.com/)[YOUR_GITHUB_USERNAME_OR_ORG]/willtoolbox.git willapps
 Move your terminal focus inside the newly downloaded directory:
 
 Bash
 cd willapps
 Method B: Downloading via Web Browser
-Open the Git repository webpage in your browser.
+Open your willtoolbox repository webpage on GitHub in your browser.
 
 Click the green Code button on the top right.
 
 Select Download ZIP.
 
-Locate the downloaded .zip file in your Downloads folder, double-click it to unpack it, and drag the extracted willapps folder to your workspace.
+Locate the downloaded .zip file in your Downloads folder, double-click it to unpack it, and rename the extracted folder from willtoolbox-main to exactly willapps before dragging it into your workspace workspace.
 
 🛠️ Step 2: Environment & Local Dependencies Setup
 Ensure your local Python interpreter environment is isolated and packages are fully updated.
