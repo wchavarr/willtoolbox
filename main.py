@@ -89,7 +89,7 @@ st.sidebar.caption("Created by wchavarr@akamai.com")
 st.sidebar.divider()
 
 # --- CONTEXTUAL SALESFORCE TOOLS ---
-if pg.title == "TC Report Dashboard (v2.0.6)":
+if "TC Report Dashboard" in pg.title or "TC Report Tool" in pg.title:
     st.sidebar.subheader("Salesforce Integration")
     reports = load_report_config()
 
