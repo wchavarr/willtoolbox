@@ -9,7 +9,7 @@ import subprocess
 import json
 
 # --- VERSIONING ---
-VERSION = "2.1.2"
+VERSION = "2.1.4-CalculationsFixed"
 
 # --- SIDEBAR: PROJECT CONFIGURATION ---
 st.sidebar.title(f"TC Report Tool v{VERSION}")
@@ -80,6 +80,28 @@ if uploaded_file:
                 
                 last_day_of_month = calendar.monthrange(end_year, end_month)[1]
                 calculated_end = datetime(end_year, end_month, last_day_of_month).date()
+
+                # --- CORRECTED SMART INCREMENTAL ROLLING ENGINE ---
+                # Safely advances in precise 3-month blocks based on the exact base window
+                today_date = datetime.now().date()
+                
+                while today_date > calculated_end:
+                    # Advance the start month by exactly 3 months
+                    start_m = calculated_start.month + 3
+                    start_y = calculated_start.year
+                    if start_m > 12:
+                        start_m -= 12
+                        start_y += 1
+                    calculated_start = datetime(start_y, start_m, 1).date()
+                    
+                    # Align the end month precisely to 2 months after the newly updated start month
+                    end_m = calculated_start.month + 2
+                    end_y = calculated_start.year
+                    if end_m > 12:
+                        end_m -= 12
+                        end_y += 1
+                    last_day = calendar.monthrange(end_y, end_m)[1]
+                    calculated_end = datetime(end_y, end_m, last_day).date()
 
         # 2. Handle Background Salesforce Allocation Sync Upfront
         if 'Project' in df_peek.columns and not df_peek['Project'].empty:
