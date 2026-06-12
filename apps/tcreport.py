@@ -9,7 +9,7 @@ import subprocess
 import json
 
 # --- VERSIONING ---
-VERSION = "2.1.4-CalculationsFixed"
+VERSION = "2.1.8-DailySplit"
 
 # --- SIDEBAR: PROJECT CONFIGURATION ---
 st.sidebar.title(f"TC Report Tool v{VERSION}")
@@ -23,7 +23,7 @@ if 'start_date' not in st.session_state:
 if 'end_date' not in st.session_state:
     st.session_state.end_date = datetime(2026, 7, 31).date()
 if 'budget_hours_state' not in st.session_state:
-    st.session_state.budget_hours_state = 120.0  # Safe initial baseline baseline fallback
+    st.session_state.budget_hours_state = 120.0  # Safe initial baseline fallback
 
 calculated_start = st.session_state.start_date
 calculated_end = st.session_state.end_date
@@ -70,7 +70,17 @@ if uploaded_file:
             peek_dates = pd.to_datetime(df_peek[date_col], errors='coerce').dropna()
             if not peek_dates.empty:
                 min_date = peek_dates.min()
-                calculated_start = datetime(min_date.year, min_date.month, 1).date()
+                
+                # SNEAK PEEK DATE OVERHANG SAFEGUARD
+                # If the earliest date belongs to a trailing month-end tail (day 26 or later),
+                # we roll the start date cleanly forward to the 1st day of the true target month.
+                if min_date.day >= 26:
+                    if min_date.month == 12:
+                        calculated_start = datetime(min_date.year + 1, 1, 1).date()
+                    else:
+                        calculated_start = datetime(min_date.year, min_date.month + 1, 1).date()
+                else:
+                    calculated_start = datetime(min_date.year, min_date.month, 1).date()
                 
                 end_month = calculated_start.month + 2
                 end_year = calculated_start.year
@@ -215,16 +225,50 @@ if uploaded_file:
             st.error("Could not find a valid Date column in the uploaded file.")
             st.stop()
             
-        # Map fields matching raw spreadsheet columns natively
-        df['Total Hours'] = pd.to_numeric(df['Total Hours'], errors='coerce').fillna(0)
-        df['Date'] = pd.to_datetime(df[active_date_col], errors='coerce')
+        # Map fields matching raw spreadsheet columns safely
         df = df.rename(columns={'Timecard: Owner Name': 'Owner', 'Milestone: Milestone Name': 'Milestone'})
-        
-        # Collect daily text entries seamlessly
-        note_cols = [c for c in df.columns if 'Notes' in str(c)]
-        df['Notes'] = df[note_cols].fillna('').agg(' | '.join, axis=1)
-        
-        processed_df = df[['Date', 'Owner', 'Milestone', 'Total Hours', 'Notes']].dropna(subset=['Date'])
+        if 'Owner' not in df.columns and 'Timecard: Owner Name' in df.columns:
+            df = df.rename(columns={'Timecard: Owner Name': 'Owner'})
+        if 'Milestone' not in df.columns and 'Milestone: Milestone Name' in df.columns:
+            df = df.rename(columns={'Milestone: Milestone Name': 'Milestone'})
+
+        # Group by unique timecards to clear out the repeated week-rows noise
+        if 'Timecard: Timecard Id' in df.columns:
+            unique_timecards = df.drop_duplicates(subset=['Timecard: Timecard Id'])
+        else:
+            unique_timecards = df
+
+        # --- GRANULAR DAILY UNPIVOT ENGINE ---
+        # Expands horizontal multi-day columns vertically into separate logs with correct dates
+        expanded_rows = []
+        for idx, row in unique_timecards.iterrows():
+            base_date = pd.to_datetime(row[active_date_col], errors='coerce')
+            if pd.isna(base_date):
+                continue
+            
+            # Find Monday of that specific entry's week to act as our temporal baseline anchor
+            monday = base_date - timedelta(days=base_date.weekday())
+            
+            for day_idx, day_name in enumerate(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']):
+                hrs_col = f'{day_name} Hours'
+                notes_col = f'{day_name} Notes'
+                if hrs_col in row and notes_col in row:
+                    hrs = pd.to_numeric(row[hrs_col], errors='coerce')
+                    if pd.notna(hrs) and hrs > 0:
+                        day_date = monday + timedelta(days=day_idx)
+                        expanded_rows.append({
+                            'Date': day_date,
+                            'Owner': row['Owner'],
+                            'Milestone': row['Milestone'],
+                            'Hours': hrs,
+                            'Notes': str(row[notes_col]).strip() if pd.notna(row[notes_col]) else ''
+                        })
+
+        if expanded_rows:
+            processed_df = pd.DataFrame(expanded_rows)
+        else:
+            processed_df = pd.DataFrame(columns=['Date', 'Owner', 'Milestone', 'Hours', 'Notes'])
+
         processed_df['Team'] = processed_df['Owner'].apply(get_team)
 
         # Set calculations target pool to mirror state memory (which supports live manual overrides)
@@ -232,7 +276,7 @@ if uploaded_file:
 
         # Calculations
         today = datetime.now().date()
-        project_total_used = processed_df['Total Hours'].sum()
+        project_total_used = processed_df['Hours'].sum()
         total_project_days = max((end_date_input - start_date_input).days, 1)
         total_working_days = len(pd.bdate_range(start=today + timedelta(days=1), end=end_date_input)) if today < end_date_input else 0
         weeks_rem_decimal = max(total_working_days / 5, 0.1)
@@ -281,8 +325,8 @@ if uploaded_file:
         tab1, tab2, tab3, tab4 = st.tabs(["🔥 Burn Rate Analysis", "📊 Distribution", "🛡️ Security vs Delivery", "📝 Activity Log"])
         
         with tab1:
-            chart_df = filtered_df.groupby('Date')['Total Hours'].sum().reset_index().sort_values('Date')
-            chart_df['Cumulative'] = chart_df['Total Hours'].cumsum()
+            chart_df = filtered_df.groupby('Date')['Hours'].sum().reset_index().sort_values('Date')
+            chart_df['Cumulative'] = chart_df['Hours'].cumsum()
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=chart_df['Date'], y=chart_df['Cumulative'], name='Ongoing Usage', line=dict(color='red', width=4)))
             fig.add_trace(go.Scatter(x=[start_date_input, end_date_input], y=[0, active_budget_hours], name='Budget Target', line=dict(color='gray', dash='dash')))
@@ -290,15 +334,15 @@ if uploaded_file:
 
         with tab2:
             col1, col2 = st.columns(2)
-            col1.plotly_chart(px.bar(filtered_df.groupby('Owner')['Total Hours'].sum().reset_index(), x='Total Hours', y='Owner', orientation='h', title="Hours by Individual"), use_container_width=True)
-            col2.plotly_chart(px.pie(filtered_df.groupby('Milestone')['Total Hours'].sum().reset_index(), values='Total Hours', names='Milestone', title="Hours by Milestone"), use_container_width=True)
+            col1.plotly_chart(px.bar(filtered_df.groupby('Owner')['Hours'].sum().reset_index(), x='Hours', y='Owner', orientation='h', title="Hours by Individual"), use_container_width=True)
+            col2.plotly_chart(px.pie(filtered_df.groupby('Milestone')['Hours'].sum().reset_index(), values='Hours', names='Milestone', title="Hours by Milestone"), use_container_width=True)
 
         with tab3:
             st.subheader("🛡️ Security vs Delivery Analysis")
             ana_rows = []
             for _, row in filtered_df.iterrows():
                 acts = get_activities(row['Notes'], row['Owner'])
-                share = row['Total Hours'] / len(acts)
+                share = row['Hours'] / len(acts)
                 for a in acts:
                     ana_rows.append({'Owner': row['Owner'], 'Team': row['Team'], 'Activity': a, 'Hours': share})
             ana_df = pd.DataFrame(ana_rows)
@@ -325,9 +369,9 @@ if uploaded_file:
                 log_display = log_display[log_display['Date'].dt.strftime('%Y-%m-%d') == selected_week]
             
             log_display['Date'] = log_display['Date'].dt.strftime('%Y-%m-%d')
-            log_display['Total Hours'] = log_display['Total Hours'].round(2)
+            log_display['Hours'] = log_display['Hours'].round(2)
             
-            st.dataframe(log_display[['Date', 'Owner', 'Team', 'Milestone', 'Total Hours', 'Notes']].sort_values(['Date', 'Owner'], ascending=[False, True]), use_container_width=True)
+            st.dataframe(log_display[['Date', 'Owner', 'Team', 'Milestone', 'Hours', 'Notes']].sort_values(['Date', 'Owner'], ascending=[False, True]), use_container_width=True)
 
     except Exception as e:
         st.error(f"Error processing report: {e}")
